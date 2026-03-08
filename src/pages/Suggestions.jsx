@@ -4,7 +4,7 @@ import { useUser } from "../context/UserContext";
 
 function Suggestions() {
   const navigate = useNavigate();
-  const { user, meals, getMealsByPreferences, getTodayProteinConsumed, addCustomMeal, addToFoodLog } = useUser();
+  const { user, getMealsByPreferences, getTodayProteinConsumed, addCustomMeal, addToFoodLog } = useUser();
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [mealForm, setMealForm] = useState({
     name: "",
@@ -277,6 +277,16 @@ function Suggestions() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Continue Button */}
+      <div className="flex justify-center mt-8 animate-slide-in-up stagger-7">
+        <button
+          onClick={() => navigate("/logfood")}
+          className="px-8 py-4 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition text-lg"
+        >
+          Continue to Log Food →
+        </button>
       </div>
     </main>
   );

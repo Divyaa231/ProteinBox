@@ -1,12 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 
 function Progress() {
+  const navigate = useNavigate();
   const { user } = useUser();
-
-  if (!user?.onboardingComplete) {
-    return <div>Please complete onboarding first</div>;
-  }
 
   const [weeklyData] = useState([
     { day: "Mon", protein: 120, calories: 2350, carbs: 285 },
@@ -17,6 +15,10 @@ function Progress() {
     { day: "Sat", protein: 140, calories: 2450, carbs: 305 },
     { day: "Sun", protein: 125, calories: 2350, carbs: 285 },
   ]);
+
+  if (!user?.onboardingComplete) {
+    return <div>Please complete onboarding first</div>;
+  }
 
   const avgProtein = Math.round(weeklyData.reduce((sum, d) => sum + d.protein, 0) / weeklyData.length);
   const avgCalories = Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length);
@@ -171,6 +173,16 @@ function Progress() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Continue Button */}
+      <div className="flex justify-center mt-8 animate-slide-in-up stagger-6">
+        <button
+          onClick={() => navigate("/suggestions")}
+          className="px-8 py-4 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition text-lg"
+        >
+          Continue to Suggestions →
+        </button>
       </div>
       </div>
     </main>

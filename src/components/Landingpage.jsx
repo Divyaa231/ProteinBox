@@ -4,11 +4,11 @@ import LandingNavbar from './LandingNavbar';
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-white text-gray-900">
       <LandingNavbar />
 
       {/* Hero Section */}
-      <section id="home" className="pt-16 min-h-screen flex items-center bg-gradient-to-r from-green-600 to-green-700 dark:from-green-900 dark:to-slate-900 text-white transition-colors duration-300">
+      <section id="home" className="pt-16 min-h-screen flex items-center bg-gradient-to-r from-green-600 to-green-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in-up">
@@ -37,44 +37,44 @@ function LandingPage() {
       </section>
 
       {/* Problem Section */}
-      <section className="py-20 bg-white dark:bg-slate-900 transition-colors duration-300">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">The Protein Problem</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto transition-colors duration-300">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">The Protein Problem</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Millions struggle to meet their daily protein needs due to busy lifestyles and unhealthy eating habits
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-red-50 dark:bg-red-900 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-red-50 to-red-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-red-200">
               <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-6 mx-auto">
                 <span className="text-2xl">🍚</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">Carb Heavy Diets</h3>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-300">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Carb Heavy Diets</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Traditional Indian meals are rich in carbohydrates but lack sufficient protein content,
                 leading to incomplete nutrition and energy crashes.
               </p>
             </div>
 
-            <div className="bg-orange-50 dark:bg-orange-900 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-orange-200">
               <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mb-6 mx-auto">
                 <span className="text-2xl">💰</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">Expensive Options</h3>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-300">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Expensive Options</h3>
+              <p className="text-gray-600 leading-relaxed">
                 High-protein meals on food delivery apps cost ₹300-₹450, making consistent healthy eating
                 unaffordable for students and young professionals.
               </p>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-200">
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto">
                 <span className="text-2xl">⏰</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">Busy Lifestyles</h3>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-300">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Busy Lifestyles</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Students and working professionals don't have time to cook nutritious meals,
                 leading to reliance on unhealthy fast food and processed snacks.
               </p>
@@ -84,17 +84,17 @@ function LandingPage() {
       </section>
 
       {/* Solution Section */}
-      <section className="py-20 bg-gray-50 dark:bg-slate-800 transition-colors duration-300">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">Our Solution</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto transition-colors duration-300">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Solution</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Protein Box delivers affordable, high-protein ready-to-eat meals that fit your lifestyle
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white dark:bg-slate-700 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white text-xl">📊</span>
               </div>
@@ -102,7 +102,7 @@ function LandingPage() {
               <p className="text-gray-600 text-sm">Calculate your exact protein needs based on your goals and lifestyle</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white text-xl">🥘</span>
               </div>
@@ -110,7 +110,7 @@ function LandingPage() {
               <p className="text-gray-600 text-sm">Fresh, nutritious meal boxes prepared in our cloud kitchen</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white text-xl">💰</span>
               </div>
@@ -118,7 +118,7 @@ function LandingPage() {
               <p className="text-gray-600 text-sm">Subscription plans starting from just ₹199 per meal</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white text-xl">🚚</span>
               </div>
@@ -130,7 +130,7 @@ function LandingPage() {
       </section>
 
       {/* Meal Box Preview */}
-      <section id="menu" className="py-20 bg-gradient-to-r from-green-50 to-blue-50">
+      <section id="menu" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Protein Boxes</h2>
@@ -138,7 +138,7 @@ function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
               <img
                 src="https://images.unsplash.com/photo-1546833999-b9f581a1996d"
                 alt="Paneer Power Box"
@@ -157,7 +157,7 @@ function LandingPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
               <img
                 src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1"
                 alt="Chicken Muscle Box"
@@ -176,7 +176,7 @@ function LandingPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
               <img
                 src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd"
                 alt="Soya Vegan Box"

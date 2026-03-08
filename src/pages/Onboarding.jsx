@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { calculateBMI, getBMICategory, calculateTDEE, calculateMacros, calculateProteinTarget } from "../utils/fitnessCalculations";
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { completeOnboarding } = useUser();
+  const { completeOnboarding, user } = useUser();
+
+  // Redirect if onboarding is already complete
+  useEffect(() => {
+    if (user?.onboardingComplete) {
+      navigate("/profile");
+    }
+  }, [user?.onboardingComplete, navigate]);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -19,9 +26,7 @@ function Onboarding() {
     preferences: [],
   });
 
-  const [showAllergyInput, setShowAllergyInput] = useState(false);
   const [allergyInput, setAllergyInput] = useState("");
-  const [preferenceInput, setPreferenceInput] = useState("");
   const [calculations, setCalculations] = useState(null);
 
   const handleChange = (e) => {
@@ -103,7 +108,7 @@ function Onboarding() {
       ...formData,
       calculations,
     });
-    navigate("/suggestions");
+    navigate("/progress");
   };
 
   const preferenceOptions = [
@@ -111,7 +116,7 @@ function Onboarding() {
     "Fish",
     "Paneer",
     "Tofu",
-    "Beef",
+    "eggs",
     "Vegetarian",
     "Vegan",
     "Low Carb",

@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { useState } from "react";
 
 function OrderConfirmation() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const [orderId] = useState(() => `ORD-${Date.now().toString().slice(-6)}`);
 
   const orderMacros = {
     protein: 64,
@@ -29,7 +31,7 @@ function OrderConfirmation() {
           <div className="space-y-4 mb-6 pb-6 border-b border-slate-700">
             <div className="flex justify-between">
               <span className="text-gray-400">Order ID:</span>
-              <span className="font-mono font-bold">#ORD-{Date.now().toString().slice(-6)}</span>
+              <span className="font-mono font-bold">#{orderId}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Customer:</span>
@@ -72,9 +74,9 @@ function OrderConfirmation() {
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/logfood")}
             className="w-full py-3 rounded-lg bg-gradient-to-r from-green-400 to-green-600 font-bold text-black hover:from-green-500 hover:to-green-700 transition"
           >
             Back to Dashboard
@@ -84,6 +86,12 @@ function OrderConfirmation() {
             className="w-full py-3 rounded-lg bg-slate-700 font-bold text-white hover:bg-slate-600 transition"
           >
             Continue Shopping
+          </button>
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full py-3 rounded-lg bg-blue-600 font-bold text-white hover:bg-blue-700 transition"
+          >
+            View Profile
           </button>
         </div>
       </div>

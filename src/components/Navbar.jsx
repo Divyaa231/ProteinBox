@@ -1,12 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { useTheme } from "../context/ThemeContext";
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useUser();
-  const { isDark, toggleTheme } = useTheme();
 
   const isActive = (path) => location.pathname === path;
 
@@ -18,7 +16,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <nav className="bg-slate-900 border-b border-slate-700 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -65,15 +63,6 @@ function Navbar() {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-yellow-400 transition text-lg"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDark ? "☀️" : "🌙"}
-            </button>
-
             <Link
               to="/profile"
               className="text-gray-300 hover:text-white transition flex items-center space-x-1"

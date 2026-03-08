@@ -3,58 +3,51 @@ import { createContext, useState, useContext, useEffect } from "react";
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [meals, setMeals] = useState([
-    {
-      id: 1,
-      name: "Grilled Chicken Protein Box",
-      restaurant: "FreshBox Kitchen",
-      price: 299,
-      protein: 64,
-      calories: 480,
-      carbs: 38,
-      createdBy: "system",
-    },
-    {
-      id: 2,
-      name: "Paneer Power Bowl",
-      restaurant: "FitMeals Hub",
-      price: 249,
-      protein: 48,
-      calories: 420,
-      carbs: 32,
-      createdBy: "system",
-    },
-  ]);
-
-  const [foodLog, setFoodLog] = useState([]);
-
-  // Load user from localStorage on mount
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return !!savedUser;
+  });
+  const [meals, setMeals] = useState(() => {
     const savedMeals = localStorage.getItem("meals");
+    return savedMeals ? JSON.parse(savedMeals) : [
+      {
+        id: 1,
+        name: "Grilled Chicken Protein Box",
+        restaurant: "FreshBox Kitchen",
+        price: 299,
+        protein: 64,
+        calories: 480,
+        carbs: 38,
+        createdBy: "system",
+      },
+      {
+        id: 2,
+        name: "Paneer Power Bowl",
+        restaurant: "FitMeals Hub",
+        price: 249,
+        protein: 48,
+        calories: 420,
+        carbs: 32,
+        createdBy: "system",
+      },
+    ];
+  });
+
+  const [foodLog, setFoodLog] = useState(() => {
     const savedFoodLog = localStorage.getItem("foodLog");
+    return savedFoodLog ? JSON.parse(savedFoodLog) : [];
+  });
 
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      setIsAuthenticated(true);
-    }
-
-    if (savedMeals) {
-      setMeals(JSON.parse(savedMeals));
-    }
-
-    if (savedFoodLog) {
-      setFoodLog(JSON.parse(savedFoodLog));
-    }
-  }, []);
-
-  // Save user to localStorage whenever it changes
+  // Save to localStorage whenever state changes
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
     }
   }, [user]);
 
@@ -88,6 +81,14 @@ export function UserProvider({ children }) {
       ...profileData,
       onboardingComplete: true,
       createdAt: new Date(),
+    };
+    setUser(userData);
+  };
+
+  const completeProfile = () => {
+    const userData = {
+      ...user,
+      profileComplete: true,
     };
     setUser(userData);
   };
@@ -164,6 +165,7 @@ export function UserProvider({ children }) {
         foodLog,
         login,
         completeOnboarding,
+        completeProfile,
         logout,
         addCustomMeal,
         deleteMeal,

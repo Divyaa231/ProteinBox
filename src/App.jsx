@@ -1,8 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { UserProvider, useUser } from "./context/UserContext";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import LandingPage from "./components/landingpage";
-import Navbar from "./components/Navbar";
+import { UserProvider } from "./context/UserContext";
+import LandingPage from "./components/Landingpage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import LogFood from "./pages/LogFood";
@@ -12,60 +10,31 @@ import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 
 function AppRoutes() {
-  const { isAuthenticated, user } = useUser();
-
   return (
-    <>
-      <Routes>
-        {/* Landing Page - accessible to everyone */}
-        <Route path="/" element={<LandingPage />} />
+    <Routes>
+      {/* Landing Page - accessible to everyone */}
+      <Route path="/" element={<LandingPage />} />
 
         {/* Public Routes - always available */}
         <Route path="/login" element={<Login />} />
 
         {/* Authenticated Routes */}
-        {isAuthenticated && (
-          <>
-            <Navbar />
-            {!user?.onboardingComplete ? (
-              <>
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="*" element={<Navigate to="/onboarding" />} />
-              </>
-            ) : (
-              <>
-                <Route path="/dashboard" element={<LogFood />} />
-                <Route path="/suggestions" element={<Suggestions />} />
-                <Route path="/progress" element={<Progress />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/order-confirmation" element={<OrderConfirmation />} />
-                <Route path="*" element={<Navigate to="/suggestions" />} />
-              </>
-            )}
-          </>
-        )}
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/suggestions" element={<Suggestions />} />
+        <Route path="/logfood" element={<LogFood />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/profile" element={<Profile />} />
 
-        {/* Redirect unauthenticated users to landing page */}
-        {!isAuthenticated && (
-          <Route path="*" element={<Navigate to="/" />} />
-        )}
+        {/* Catch all - redirect to landing if not authenticated */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
-  );
-}
+    );
+  }
 
 function AppLayout() {
-  const { isDark } = useTheme();
-  
   return (
-    <div
-      style={{
-        backgroundColor: isDark ? "#0f172a" : "#ffffff",
-        color: isDark ? "#ffffff" : "#000000",
-        transition: "background-color 0.3s, color 0.3s",
-      }}
-      className="min-h-screen"
-    >
+    <div className="min-h-screen bg-white text-black">
       <AppRoutes />
     </div>
   );
@@ -73,11 +42,9 @@ function AppLayout() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <UserProvider>
-        <AppLayout />
-      </UserProvider>
-    </ThemeProvider>
+    <UserProvider>
+      <AppLayout />
+    </UserProvider>
   );
 }
 

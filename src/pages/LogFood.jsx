@@ -4,7 +4,7 @@ import { useUser } from "../context/UserContext";
 
 function LogFood() {
   const navigate = useNavigate();
-  const { user, foodLog, getTodayFoodLog, getTodayProteinConsumed, removeFoodLog } = useUser();
+  const { user, getTodayFoodLog, getTodayProteinConsumed, removeFoodLog } = useUser();
   const [showAddFood, setShowAddFood] = useState(false);
   const [foodInput, setFoodInput] = useState({ name: "", protein: "", calories: "" });
 
@@ -184,6 +184,16 @@ function LogFood() {
             </button>
           </div>
         )}
+
+        {/* Continue Button */}
+        <div className="flex justify-center mt-8 animate-slide-in-up stagger-9">
+          <button
+            onClick={() => navigate("/order-confirmation")}
+            className="px-8 py-4 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition text-lg"
+          >
+            Continue to Order Confirmation →
+          </button>
+        </div>
       </div>
     </main>
   );

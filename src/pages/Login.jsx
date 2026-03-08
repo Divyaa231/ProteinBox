@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+// import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useUser();
+  const { login, user } = useUser();
   const navigate = useNavigate();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      if (!user.onboardingComplete) {
+        navigate("/onboarding");
+      } else if (!user.profileComplete) {
+        navigate("/profile");
+      } else {
+        navigate("/suggestions");
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
