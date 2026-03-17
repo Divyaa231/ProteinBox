@@ -1,362 +1,298 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import LandingNavbar from './LandingNavbar';
 
+const FRAME_COUNT = 192;
+
+/**
+ * LandingPage component that uses a scroll-based parallax effect with image frames.
+ * Displays a cinematic sequence of frames with timed text overlays.
+ */
 function LandingPage() {
+  const [currentFrame, setCurrentFrame] = useState(1);
+  const canvasRef = useRef(null);
+  const imagesRef = useRef([]);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  // Preload images for the scroll animation
+  useEffect(() => {
+    let loadedCount = 0;
+    const loadImages = () => {
+      for (let i = 1; i <= FRAME_COUNT; i++) {
+        const img = new Image();
+        // Vite serves public folder at root
+        img.src = `/frames/frame_${String(i).padStart(4, '0')}.png`;
+        img.onload = () => {
+          loadedCount++;
+          setLoadingProgress(Math.floor((loadedCount / FRAME_COUNT) * 100));
+          if (loadedCount === FRAME_COUNT) {
+            setImagesLoaded(true);
+          }
+        };
+        img.onerror = () => {
+          console.error(`Failed to load frame ${i}`);
+          loadedCount++; // Still count to avoid sticking at 99%
+        };
+        imagesRef.current[i] = img;
+      }
+    };
+    loadImages();
+  }, []);
+
+  // Sync canvas with current frame and window size
+  useEffect(() => {
+    const drawFrame = () => {
+      if (!imagesLoaded || !canvasRef.current || !imagesRef.current[currentFrame]) return;
+      
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      const img = imagesRef.current[currentFrame];
+      
+      // Handle canvas sizing for high DPI displays
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      context.scale(dpr, dpr);
+
+      // Clear and draw image with "cover" behavior
+      context.clearRect(0, 0, rect.width, rect.height);
+      
+      const imgRatio = img.width / img.height;
+      const canvasRatio = rect.width / rect.height;
+      
+      let drawWidth, drawHeight, offsetX, offsetY;
+      
+      if (imgRatio > canvasRatio) {
+        drawHeight = rect.height;
+        drawWidth = rect.height * imgRatio;
+        offsetX = (rect.width - drawWidth) / 2;
+        offsetY = 0;
+      } else {
+        drawWidth = rect.width;
+        drawHeight = rect.width / imgRatio;
+        offsetX = 0;
+        offsetY = (rect.height - drawHeight) / 2;
+      }
+      
+      context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    };
+
+    drawFrame();
+    
+    window.addEventListener('resize', drawFrame);
+    return () => window.removeEventListener('resize', drawFrame);
+  }, [currentFrame, imagesLoaded]);
+
+  // Handle scroll to calculate frame index
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+      
+      // Calculate which frame to show based on scroll percentage
+      const scrollFraction = scrollTop / maxScrollTop;
+      const frameIndex = Math.min(
+        FRAME_COUNT,
+        Math.max(1, Math.ceil(scrollFraction * FRAME_COUNT))
+      );
+      
+      // Use requestAnimationFrame for smooth performance
+      requestAnimationFrame(() => setCurrentFrame(frameIndex));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Loading Screen
+  if (!imagesLoaded) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center text-3xl mb-6 animate-pulse">
+          🥗
+        </div>
+        <h2 className="text-white text-2xl font-bold mb-4 tracking-tighter uppercase">ProteinBox Loading...</h2>
+        <div className="w-64 h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-green-500 transition-all duration-300 ease-out" 
+            style={{ width: `${loadingProgress}%` }}
+          />
+        </div>
+        <p className="text-gray-500 mt-4 font-mono text-sm">{loadingProgress}% COMPLETE</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="relative bg-black text-white selection:bg-green-500 selection:text-black">
       <LandingNavbar />
+      
+      {/* Cinematic Canvas Background */}
+      <div className="fixed inset-0 z-0">
+        <canvas ref={canvasRef} className="w-full h-full block" />
+        {/* Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 pointer-events-none" />
+      </div>
 
-      {/* Hero Section */}
-      <section id="home" className="pt-16 min-h-screen flex items-center bg-gradient-to-r from-green-600 to-green-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in-up">
-              <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                Complete Your Daily <span className="text-green-200">Protein</span> Without Cooking
+      {/* Main Content Sections (Layered on top of sticky canvas) */}
+      <div className="relative z-10 antialiased">
+        
+        {/* Section 1: Intro - The Vision */}
+        <section className="h-[250vh] flex flex-col items-center justify-center">
+          <div 
+            className="sticky top-0 h-screen flex flex-col items-center justify-center text-center px-4 transition-all duration-700 pointer-events-none"
+            style={{ 
+              opacity: currentFrame < 45 ? 1 : 0,
+              transform: `scale(${Math.max(0.8, 1 - (currentFrame / 200))}) translateY(${-currentFrame * 0.5}px)`
+            }}
+          >
+            <div className="bg-black/10 backdrop-blur-[2px] p-8 md:p-12 rounded-[3rem]">
+              <h1 className="text-6xl md:text-9xl font-black mb-6 tracking-tighter shadow-black drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                PROTEIN <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">EVOLVED</span>
               </h1>
-              <p className="text-xl mb-8 text-green-100 leading-relaxed">
-                Affordable high-protein ready-to-eat meals designed for students, gym lovers, and busy professionals.
-                Get your daily protein goals met with our nutritious meal boxes delivered to your doorstep.
+              <p className="text-xl md:text-3xl font-medium max-w-2xl mx-auto text-gray-100 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                Stop guessing. Start growing. The ultimate companion for your nutrition journey.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/login" className="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-green-50 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                  Get Started
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Tracking - The Logic */}
+        <section className="h-[250vh] flex flex-col items-center justify-center">
+          <div 
+            className="sticky top-0 h-screen flex flex-col items-center justify-center text-center px-4 transition-all duration-700 pointer-events-none"
+            style={{ 
+              opacity: currentFrame >= 60 && currentFrame < 115 ? 1 : 0,
+              transform: currentFrame >= 60 && currentFrame < 115 
+                ? `translateY(${(85 - currentFrame) * 2}px)` 
+                : 'translateY(100px)'
+            }}
+          >
+            <div className="bg-black/20 backdrop-blur-sm p-8 md:p-16 rounded-[4rem] border border-white/5">
+              <div className="inline-block px-4 py-1 bg-green-500/20 rounded-full border border-green-500/30 text-green-400 font-bold tracking-widest text-sm mb-6 uppercase">
+                Precision Nutrition
+              </div>
+              <h2 className="text-5xl md:text-8xl font-black mb-8 tracking-tight drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                KNOW YOUR <span className="text-green-500">NUMBERS</span>
+              </h2>
+              <p className="text-xl md:text-2xl font-light max-w-2xl mx-auto text-gray-200 leading-relaxed drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                Our AI tracks your protein and calories in real-time. Whether you're bulking, cutting, or maintaining, we've got the data to back you up.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Delivery - The Solution */}
+        <section className="h-[250vh] flex flex-col items-center justify-center">
+          <div 
+            className="sticky top-0 h-screen flex flex-col items-center justify-center text-center px-4 transition-all duration-700 pointer-events-none"
+            style={{ 
+              opacity: currentFrame >= 135 && currentFrame < 185 ? 1 : 0,
+              transform: currentFrame >= 135 && currentFrame < 185 
+                ? `translateY(${(160 - currentFrame) * 2}px)` 
+                : 'translateY(100px)'
+            }}
+          >
+            <div className="bg-black/20 backdrop-blur-sm p-8 md:p-16 rounded-[4rem] border border-white/5">
+              <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full border border-blue-500/30 text-blue-400 font-bold tracking-widest text-sm mb-6 uppercase">
+                Smart Delivery
+              </div>
+              <h2 className="text-5xl md:text-8xl font-black mb-8 tracking-tight text-white drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                GOAL <span className="text-blue-500 underline decoration-blue-500/50 underline-offset-8">UNLOCKED</span>
+              </h2>
+              <p className="text-xl md:text-2xl font-light max-w-2xl mx-auto text-gray-200 leading-relaxed drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                Didn't hit your daily protein quota? We calculate exactly what you're missing and deliver a curated Protein Box right to your door.
+              </p>
+            </div>
+          </div>
+        </section>
+
+
+
+        {/* Section 4: Final CTA - The Start */}
+        <section className="h-screen flex flex-col items-center justify-center">
+          <div 
+            className="text-center px-4 transition-all duration-1000" 
+            style={{ 
+              opacity: currentFrame >= 188 ? 1 : 0, 
+              transform: currentFrame >= 188 ? 'translateY(0) scale(1)' : 'translateY(100px) scale(0.9)' 
+            }}
+          >
+            <div className="bg-black/60 backdrop-blur-xl p-12 md:p-20 rounded-[3rem] border border-white/10 shadow-[0_0_100px_rgba(34,197,94,0.15)] max-w-4xl mx-auto relative overflow-hidden group">
+              {/* Decorative background element */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-50" />
+              
+              <h2 className="text-5xl md:text-8xl font-black mb-8 tracking-tighter text-white">
+                STAY <span className="text-green-500">POSITIVE.</span><br />
+                GET <span className="text-white">STARTED.</span>
+              </h2>
+              <p className="text-xl md:text-3xl mb-12 text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                Health is a journey, and every gram of protein counts. You have the goal, we have the plan. Let's make it happen together.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
+                <Link 
+                  to="/login" 
+                  className="px-16 py-6 bg-green-500 hover:bg-green-400 text-black font-black text-2xl rounded-full transition-all duration-300 transform hover:scale-110 hover:shadow-[0_0_50px_rgba(34,197,94,0.6)] animate-bounce"
+                >
+                  START NOW
                 </Link>
+                <div className="text-gray-400 font-medium text-lg">
+                  Ready to join? <Link to="/login" className="text-white hover:text-green-400 underline decoration-green-500/30 underline-offset-4 transition-all">Sign up today</Link>
+                </div>
+              </div>
+              
+              {/* Bottom detail */}
+              <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-8 opacity-60">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span> Personalized Plans
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span> AI Calculations
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span> Express Delivery
+                </div>
               </div>
             </div>
-            <div className="animate-fade-in-right">
-              <img
-                src="https://images.unsplash.com/photo-1546793665-c74683f339c1"
-                alt="Healthy protein meal boxes"
-                className="w-full max-w-lg mx-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
-              />
-            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Persistent Scroll indicator */}
+      <div 
+        className={`fixed bottom-12 left-1/2 -translate-x-1/2 transition-all duration-700 ${currentFrame > 20 ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <span className="text-xs font-black tracking-[0.4em] text-white/40 uppercase">Scroll to explore the future</span>
+          <div className="w-[2px] h-16 bg-white/10 rounded-full overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-green-500 to-transparent animate-infinite-scroll" />
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Problem Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">The Protein Problem</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Millions struggle to meet their daily protein needs due to busy lifestyles and unhealthy eating habits
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-red-50 to-red-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-red-200">
-              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-6 mx-auto">
-                <span className="text-2xl">🍚</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Carb Heavy Diets</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Traditional Indian meals are rich in carbohydrates but lack sufficient protein content,
-                leading to incomplete nutrition and energy crashes.
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-orange-200">
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mb-6 mx-auto">
-                <span className="text-2xl">💰</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Expensive Options</h3>
-              <p className="text-gray-600 leading-relaxed">
-                High-protein meals on food delivery apps cost ₹300-₹450, making consistent healthy eating
-                unaffordable for students and young professionals.
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-200">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto">
-                <span className="text-2xl">⏰</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Busy Lifestyles</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Students and working professionals don't have time to cook nutritious meals,
-                leading to reliance on unhealthy fast food and processed snacks.
-              </p>
-            </div>
+      {/* Brand Watermark Overlay (Covers the original watermark) */}
+      <div className="fixed bottom-6 right-8 z-50">
+        <div className="bg-black p-1 rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.8)] flex items-center justify-center overflow-hidden">
+          <div className="w-24 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-inner">
+            <span className="text-2xl font-black text-black tracking-tighter">PB</span>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Solution Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Solution</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Protein Box delivers affordable, high-protein ready-to-eat meals that fit your lifestyle
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white text-xl">📊</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Personalized Calculator</h3>
-              <p className="text-gray-600 text-sm">Calculate your exact protein needs based on your goals and lifestyle</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white text-xl">🥘</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready-to-Eat Meals</h3>
-              <p className="text-gray-600 text-sm">Fresh, nutritious meal boxes prepared in our cloud kitchen</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white text-xl">💰</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Affordable Plans</h3>
-              <p className="text-gray-600 text-sm">Subscription plans starting from just ₹199 per meal</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white text-xl">🚚</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Fast Delivery</h3>
-              <p className="text-gray-600 text-sm">Same-day delivery from our network of cloud kitchens</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Meal Box Preview */}
-      <section id="menu" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Protein Boxes</h2>
-            <p className="text-xl text-gray-600">Choose from our delicious high-protein meal options</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
-              <img
-                src="https://images.unsplash.com/photo-1546833999-b9f581a1996d"
-                alt="Paneer Power Box"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Paneer Power Box</h3>
-                <p className="text-green-600 font-semibold text-lg mb-3">35g Protein</p>
-                <p className="text-gray-600 mb-4">Grilled paneer with quinoa, mixed vegetables, and herbs</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-gray-900">₹249</span>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
-              <img
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1"
-                alt="Chicken Muscle Box"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Chicken Muscle Box</h3>
-                <p className="text-green-600 font-semibold text-lg mb-3">45g Protein</p>
-                <p className="text-gray-600 mb-4">Grilled chicken breast with brown rice and steamed broccoli</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-gray-900">₹299</span>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200">
-              <img
-                src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd"
-                alt="Soya Vegan Box"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Soya Vegan Box</h3>
-                <p className="text-green-600 font-semibold text-lg mb-3">32g Protein</p>
-                <p className="text-gray-600 mb-4">Tofu stir-fry with mixed vegetables and quinoa</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-gray-900">₹229</span>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How Our Platform Works */}
-      <section id="how-it-works" className="py-20 bg-gradient-to-r from-gray-50 to-green-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-xl text-gray-600">Your protein journey in 5 simple steps</p>
-          </div>
-
-          {/* Interactive Flow Timeline */}
-          <div className="relative">
-            {/* Connecting Line */}
-            <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-green-500 to-green-600"></div>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
-              {/* Step 1 */}
-              <div className="group text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    1
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Create Profile</h3>
-                  <p className="text-xs text-gray-600">Sign up & set your goals</p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="group text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    2
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">AI Analysis</h3>
-                  <p className="text-xs text-gray-600">BMI & protein calculation</p>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="group text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    3
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Personalized Meals</h3>
-                  <p className="text-xs text-gray-600">Custom meal recommendations</p>
-                </div>
-              </div>
-
-              {/* Step 4 */}
-              <div className="group text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    4
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Order & Delivery</h3>
-                  <p className="text-xs text-gray-600">Fresh protein boxes delivered</p>
-                </div>
-              </div>
-
-              {/* Step 5 */}
-              <div className="group text-center">
-                <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    5
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Track Progress</h3>
-                  <p className="text-xs text-gray-600">Monitor your protein intake</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Arrows */}
-            <div className="md:hidden flex justify-center mt-8 space-x-4">
-              <div className="text-2xl text-green-500 animate-bounce">↓</div>
-              <div className="text-2xl text-green-500 animate-bounce" style={{animationDelay: '0.1s'}}>↓</div>
-              <div className="text-2xl text-green-500 animate-bounce" style={{animationDelay: '0.2s'}}>↓</div>
-              <div className="text-2xl text-green-500 animate-bounce" style={{animationDelay: '0.3s'}}>↓</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Call To Action */}
-      <section className="py-20 bg-gradient-to-r from-green-600 to-green-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">Start Completing Your Daily Protein Today</h2>
-          <p className="text-xl mb-8 text-green-100">
-            Join thousands of students and professionals who have transformed their nutrition with Protein Box
-          </p>
-          <Link to="/login" className="bg-white text-green-600 px-10 py-4 rounded-lg font-bold text-xl hover:bg-green-50 transition-all duration-300 transform hover:scale-105 shadow-lg">
-            Get Started Now
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="about" className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-xl font-bold">
-                  🥗
-                </div>
-                <span className="text-2xl font-bold">ProteinBox</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Solving protein poverty among students and working professionals with affordable,
-                high-protein ready-to-eat meals.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">📘</a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">🐦</a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">📷</a>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Menu</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Refund Policy</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Protein Box. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes infinite-scroll {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(200%); }
+        }
+        .animate-infinite-scroll {
+          animation: infinite-scroll 2s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+        }
+      `}} />
     </div>
   );
 }
 
-export default LandingPage;
+export default LandingPage;
